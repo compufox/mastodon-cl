@@ -1,8 +1,8 @@
-(in-package #:mastodon)
+(in-package :mastodon.api)
 
 (defun get-follow-requests (&key max-id since-id (limit 40))
   (setq limit (min limit 80))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "follow_requests"

@@ -1,7 +1,7 @@
-(in-package #:mastodon)
+(in-package :mastodon.api)
 
 (defun mastodon-search (query &key (resolve-non-local nil))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get "search?q="
 				 ,query
 				 ,(if resolve-non-local "&resolve=true")))))

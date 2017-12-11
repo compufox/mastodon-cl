@@ -1,8 +1,8 @@
-(in-package #:mastodon)
+(in-package :mastodon.api)
 
 (defun get-home-timeline (&key max-id since-id (limit 20))
   (setq limit (min limit 40))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "timelines/home"
@@ -12,7 +12,7 @@
 
 (defun get-public-timeline (&key max-id since-id (limit 20))
   (setq limit (min limit 40))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "timelines/public"
@@ -21,7 +21,7 @@
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
 (defun get-tag-timeline (tag &key local max-id since-id (limit 20))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "timelines/tag/" (remove #\# tag)
@@ -32,7 +32,7 @@
 
 (defun get-local-timeline (&key max-id since-id (limit 20))
   (setq limit (min limit 40))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "timelines/public?local=true"

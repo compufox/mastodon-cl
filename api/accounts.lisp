@@ -1,13 +1,13 @@
-(in-package #:mastodon)
+(in-package :mastodon.api)
 
 (defun get-account (id)
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "accounts/" id)))))
 
 (defun get-current-user ()
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request '(:get "accounts/verify_credentials"))))
 
 (defun update-user (&key display-name note avatar header)
@@ -24,7 +24,7 @@
 					 
 (defun get-account-followers (id &key max-id since-id (limit 40))
   (setq limit (min limit 80))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "accounts/" id "/followers"
@@ -34,7 +34,7 @@
 
 (defun get-account-follows (id &key max-id since-id (limit 40))
   (setq limit (min limit 80))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "accounts/" id "/following"
@@ -44,7 +44,7 @@
 
 (defun get-account-statuses (id &key exclude-replies pinned only-media max-id since-id (limit 20))
   (setq limit (min limit 40))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "accounts/" id "statuses"
@@ -77,7 +77,7 @@
 
 (defun search-accounts (query &key (limit 40))
   (setq limit (mint limit 80))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "accounts/search?q=" query

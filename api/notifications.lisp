@@ -1,8 +1,8 @@
-(in-package #:mastodon)
+(in-package :mastodon.api)
 
 (defun get-notifications (&key max-id since-id (limit 15) exclude-types)
   (setq limit (min limit 30))
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "notifications"
@@ -13,7 +13,7 @@
 							       collect (format t "&exclude_type[]=~A" type))))))))
 
 (defun get-notification (id)
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "notifications/"

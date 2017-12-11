@@ -1,7 +1,7 @@
-(in-package #:mastodon)
+(in-package :mastodon.api)
 
 (defun get-reports ()
-  (cl-json:decode-json-from-string
+  (decode-json-from-string
    (masto--perform-request '(:get "reports"))))
 
 (defun report-user (account-id status-ids comment)

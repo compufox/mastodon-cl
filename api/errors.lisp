@@ -1,6 +1,6 @@
 (in-package #:cl-user)
 
-(defpackage mastodon.error
+(defpackage :mastodon.error
   (:use :cl)
   (:export :api-error))
 
