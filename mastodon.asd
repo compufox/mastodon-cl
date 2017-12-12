@@ -21,5 +21,7 @@
 		 (:file "timelines")
 		 (:file "notifications")
 		 (:file "reports")
-		 (:file "search")))))
+		 (:file "search")
+		 (:file "streaming")))))
+
 

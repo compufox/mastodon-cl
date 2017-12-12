@@ -53,5 +53,5 @@
 (defparameter *access-token* nil
   "the token that will allow us to access the masto instance")
 
-(defparameter test-access-token "5e3d8b15abf206c1f4f96d3e6aa2420b72ada415aa299d4a17e147a5927e8471"
+(defparameter test-access-token "c433d3dd2ef458107ed26ce1c2fc02ddc30e6526fb1d71846ab018905da96ccf"
   "a test access token")

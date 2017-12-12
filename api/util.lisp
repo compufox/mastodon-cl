@@ -21,5 +21,7 @@
   (if (listp string-list)
       (with-output-to-string (s)
 	(dolist (item string-list)
-	  (if (stringp item)
-	      (format s format item))))))
+	      (format s format item)))))
+
+(defun empty-stringp (string)
+  (= (length (string-trim '(#\Space #\Newline #\Tab) string)) 0))
