@@ -1,13 +1,18 @@
 (in-package :cl-user)
 
 (defpackage :mastodon.streaming
-  (:use :mastodon.api :cl)
+  (:use :cl)
   (:import-from :cl-json
 		:decode-json-from-string)
   (:shadowing-import-from :dexador
 			  :get)
   (:import-from :dexador.decoding-stream
 		:stream-read-char)
+  (:import-from :mastodon.api
+		:masto--perform-request
+		:merge-string-list
+		:empty-stringp)
+		
   (:export :stream-home
 	   :stream-local
 	   :stream-public
@@ -16,10 +21,14 @@
 
 (in-package :mastodon.streaming)
 
+(intern "UPDATE")
+(intern "DELETE")
+(intern "NOTIFICATION")
+
 (defparameter *stream-socket* nil)
 
 (defun stream--get-type (line)
-  (let ((type (string-upcase (string-trim " " (subseq line 6)))))
+  (let ((type (string-upcase (string-trim '(#\Space #\Newline) (subseq line 6)))))
     (unless (empty-stringp type)
       (intern type))))
 
@@ -27,7 +36,7 @@
   (let ((parsed-data (decode-json-from-string (subseq data 6))))
     (cond
       ((eq type 'notification) ()) ; make a notification object here
-      ((eq type 'update) ()) ;make a status object here
+      ((eq type 'update) (print (cdr (assoc :content parsed-data)))) ;make a status object here
       ((eq type 'delete) ()))))  ;remove status from list of saved ones
 
 (defun stream--backend (api-path &rest wanted-types)
@@ -37,9 +46,10 @@
        for c = (stream-read-char socket)
        collect c into line
        when (char= c #\Newline) do (progn
+				     (print (and (search "data: " line) wanted))
 				     (if (and (search "data: " line) wanted)
-					 (stream--parse (nth wanted wanted-types) line)
-				       (setq wanted (position (stream--get-type line) wanted-types)))))))
+					 (print "wanted!");(stream--parse (nth wanted wanted-types) line)
+				       (setq wanted (position (stream--get-type (merge-string-list line)) wanted-types)))))))
 				     
 
 (defun stream-home ()
