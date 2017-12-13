@@ -14,7 +14,8 @@
 		       (:delete #'delete)
 		       (:patch #'patch))))
     (apply req-method (append `(,(masto--api-path path)
-				 :headers (("Authorization" . ,(concatenate 'string "Bearer " test-access-token))))
+				 :headers (("Authorization" . ,(concatenate 'string "Bearer " test-access-token))
+					   ("User-Agent" . ,*user-agent*)))
 			      args))))
 
 (defun merge-string-list (string-list &optional (format "~a"))
