@@ -3,19 +3,11 @@
 
 (defpackage :mastodon
   (:nicknames :masto)
-  (:use :cl)
-  (:export
-
-      ; status creation
-      :post-status
-      :delete-last-post))
+  (:use :mastodon.api :mastodon.streaming)
+  (:export :post-status
+	   :login
+	   :register-application))
 
 (in-package :mastodon)
 
-;;; "mastodon" goes here. Hacks and glory await!
 
-(defvar *last-toot-id* nil
-  "the id of the last status posted")
-
-(defun delete-last-post ()
-  (delete-status *last-toot-id*))

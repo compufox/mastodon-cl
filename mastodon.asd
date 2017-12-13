@@ -8,8 +8,7 @@
   :serial t
   :depends-on (:dexador
 	       :cl-json)
-  :components ((:file "mastodon")
-	       (:module "api"
+  :components ((:module "api"
 		:components
 		((:file "errors")
 		 (:file "api")
@@ -17,12 +16,14 @@
 		 (:file "apps")
 		 (:file "media")
 		 (:file "follows")
+		 (:file "instance")
 		 (:file "accounts")
 		 (:file "statuses")
 		 (:file "timelines")
 		 (:file "notifications")
 		 (:file "reports")
 		 (:file "search")
-		 (:file "streaming")))))
+		 (:file "streaming")))
+	       (:file "mastodon")))
 
 
