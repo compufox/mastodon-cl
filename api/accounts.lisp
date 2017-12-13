@@ -10,6 +10,8 @@
   (decode-json-from-string
    (masto--perform-request '(:get "accounts/verify_credentials"))))
 
+(setf (fdefinition 'verify-credentials) #'get-current-user)
+
 (defun update-user (&key display-name note avatar header)
   (let ((updated-user-data `(("display_name" . ,display-name)
 			     ("note" . ,note)
@@ -54,26 +56,6 @@
 					  (if only-media "&only_media=true")
 					  (if max-id (concatenate 'string "&max_id=" max-id))
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
-
-(defun block-account (id)
-  (masto--perform-request `(:post
-			   ,(concatenate 'string
-					 "accounts/" id "/block"))))
-
-(defun unblock-account (id)
-  (masto--perform-request `(:post
-			   ,(concatenate 'string
-					 "accounts/" id "/unblock"))))
-
-(defun mute-account (id)
-  (masto--perform-request `(:post
-			   ,(concatenate 'string
-					 "accounts/" id "/mute"))))
-
-(defun unmute-account (id)
-  (masto--perform-request `(:post
-			   ,(concatenate 'string
-					 "accounts/" id "/unmute"))))
 
 (defun search-accounts (query &key (limit 40))
   (setq limit (mint limit 80))
