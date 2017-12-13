@@ -80,7 +80,7 @@
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
 (defun post-status (status &key (visibility "public") sensitive spoiler reply-id media)
-  (if (not (member visibility *status-privacy-modes*)) (error 'unrecognized-status-privacy))
+  (when (not (member visibility *status-privacy-modes* :test #'string=)) (error 'unrecognized-status-privacy))
   (masto--perform-request `(:post "statuses" :content
 				 ,(concatenate 'list
 					       `(("status" . ,status)
