@@ -21,18 +21,16 @@
 
 (in-package :mastodon.streaming)
 
-(intern "UPDATE")
-(intern "DELETE")
-(intern "NOTIFICATION")
-
 (defparameter *stream-socket* nil)
 
 (defun stream--get-type (line)
-  (let ((type (string-upcase (string-trim '(#\Space #\Newline) (subseq line 6)))))
-    (unless (empty-stringp type)
-      (intern type))))
+  (if (> (length line) 1)
+      (let ((type (string-upcase (string-trim '(#\Space #\Newline) (subseq line 6)))))
+	(unless (empty-stringp type)
+	  (find-symbol type :mastodon.streaming)))))
 
 (defun stream--parse (type data)
+;  (print (format nil "Type: ~a, Data: ~a" type data))
   (let ((parsed-data (decode-json-from-string (subseq data 6))))
     (cond
       ((eq type 'notification) ()) ; make a notification object here
@@ -40,16 +38,22 @@
       ((eq type 'delete) ()))))  ;remove status from list of saved ones
 
 (defun stream--backend (api-path &rest wanted-types)
-  (let ((socket (masto--perform-request `(:get ,api-path :keep-alive t :want-stream t :stream t))))
+  (let ((socket (masto--perform-request `(:get ,api-path :keep-alive t :want-stream t :stream t)))
+	line
+	wanted)
     (loop
-       with wanted = nil
        for c = (stream-read-char socket)
-       collect c into line
-       when (char= c #\Newline) do (progn
-				     (print (and (search "data: " line) wanted))
-				     (if (and (search "data: " line) wanted)
-					 (print "wanted!");(stream--parse (nth wanted wanted-types) line)
-				       (setq wanted (position (stream--get-type (merge-string-list line)) wanted-types)))))))
+       do (setq line (append line (list c)))
+       if (char= c #\Newline) do (let ((whole-line (merge-string-list line)))
+;				   (print (format nil "type: ~a actual results: ~a" (type-of (stream--get-type whole-line))
+;						  (stream--get-type whole-line)))
+;				   (print (position (stream--get-type whole-line) wanted-types))
+				   (if (and (search "data: " whole-line) wanted)
+				       (progn
+					 (stream--parse (nth wanted wanted-types) whole-line)
+					 (setq wanted nil))
+				       (setq wanted (position (stream--get-type whole-line) wanted-types)))
+				   (setq line nil)))))
 				     
 
 (defun stream-home ()

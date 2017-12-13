@@ -11,6 +11,9 @@
   (:import-from :dex
 		:patch
 		:put)
+  (:import-from :mastodon.error
+		:api-error
+		:unrecognized-status-privacy)
   (:export
    
       ; searching
@@ -40,9 +43,16 @@
       :pin-status
       :unpin-status
       :delete-status
-      :post-status))
+      :post-status
+
+      ;media
+      :mass-upload-media))
 
 (in-package :mastodon.api)
+
+(defvar *version* "0.1.3")
+
+(defvar *user-agent* (concatenate 'string "mastodon-cl/" *version*))
 
 (defparameter *instance* "https://mastodon.social"
   "the instance that we should use, defaults to mastodon.social")

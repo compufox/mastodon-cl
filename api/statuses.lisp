@@ -1,5 +1,8 @@
 (in-package :mastodon.api)
 
+(defvar *status-privacy-modes* '("public" "unlisted" "private" "direct")
+  "the different privacy modes that a status can have")
+
 (defun fave-status (id)
   (masto--perform-request `(:post ,(concatenate 'string
 					       "statuses/"
@@ -77,6 +80,7 @@
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
 (defun post-status (status &key (visibility "public") sensitive spoiler reply-id media)
+  (if (not (member visibility *status-privacy-modes*)) (error 'unrecognized-status-privacy))
   (masto--perform-request `(:post "statuses" :content
 				 ,(concatenate 'list
 					       `(("status" . ,status)

@@ -1,8 +1,8 @@
 ;;;; mastodon.asd
 
 (asdf:defsystem #:mastodon
-  :description "Describe mastodon here"
-  :version "0.0.1"
+  :description "A library for interfacing with Mastodon instances"
+  :version "0.1.3"
   :author "zactepps@gmail.com"
   :license "GPLv3"
   :serial t
@@ -11,11 +11,12 @@
   :components ((:file "mastodon")
 	       (:module "api"
 		:components
-		((:file "api")
+		((:file "errors")
+		 (:file "api")
 		 (:file "util")
 		 (:file "apps")
+		 (:file "media")
 		 (:file "follows")
-		 (:file "errors")
 		 (:file "accounts")
 		 (:file "statuses")
 		 (:file "timelines")
