@@ -36,15 +36,50 @@ is replaces with replacement"
        when pos do (write-string replacement out)
        while pos)))
 
-(defun write-config (&key username overwrite)
-  (with-open-file (config-file (concatenate 'string "./" (replace-all *instance* "https://" "") ".config")
+(defun write-client-tokens ()
+  (write-config :client t))
+
+(defun write-access-tokens (&rest args)
+  (apply 'write-config :access t args))
+
+(defun load-config (conf-name)
+  (with-open-file (conf (concatenate 'string *config-dir* conf-name)
+			:direction :input
+			:if-does-not-exist nil)
+    (when (streamp conf)
+      (loop for sexp = (read conf nil)
+	 while sexp
+	 collect sexp))))
+
+(defun write-config (&key client access username)
+  (ensure-directories-exist *config-dir*)
+  (let* ((current (load-config (concatenate 'string (replace-all *instance* "https://" "")
+					    ".conf")))
+	 (changed current))
+    (cond
+      (client
+       (setq changed (append changed `(((:id . ,*client-id*)
+					(:client-key . ,*client-key*)
+					(:client-secret . ,*client-secret*)
+					(:logins . nil))))))
+      (access
+       (dolist (app changed)
+	 (when (and (string= *client-id* (cdr (assoc :id app)))
+		    access)
+	   (block checking
+	     (dolist (login (cdr (assoc :logins app)))
+	       (when (string= (cdr (assoc :access-token login)) *access-token*)
+		 (return-from checking)))
+	     (setf (cdr (assoc :logins app)) (append (cdr (assoc :logins app))
+						     `(((:access-token . ,*access-token*)
+							(:username . ,username))))))))))
+    (with-open-file (conf-file (concatenate 'string *config-dir*
+					    (replace-all *instance* "https://" "") ".conf")
 			       :direction :output
-			       :if-exists (if overwrite :overwrite :append)
+			       :if-exists :overwrite
 			       :if-does-not-exist :create)
-    (format config-file "~S~%" `((:client-key . ,*client-key*)
-				 (:client-secret . ,*client-secret*)
-				 ,(when *access-token* `(:access-token . ,*access-token*))
-				 ,(when username `(:username . ,username))))))
+      (format conf-file "~{~S~%~}" changed))))
+	
 
 (defun merge-string-list (string-list &optional (format "~a"))
   (if (listp string-list)
