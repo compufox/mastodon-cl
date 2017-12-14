@@ -22,7 +22,9 @@
 (defun load-tokens-for-user (username &key config-dir instance)
   (when config-dir (set-config-dir config-dir))
   (when instance (set-instance instance))
-  (let ((config (load-config (replace-all *instance* "https://" ""))))
+  (let ((config (load-config (concatenate 'string
+					  (replace-all *instance* "https://" "")
+					  ".conf"))))
     (block setting-tokens
       (dolist (tokens config)
 	(setq *client-id* (cdr (assoc :id tokens)))
