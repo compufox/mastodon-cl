@@ -6,7 +6,9 @@
   (:use :mastodon.api :mastodon.streaming)
   (:export :post-status
 	   :login
-	   :register-application))
+	   :register-application
+	   :oauth-login
+	   :console-oauth-login))
 
 (in-package :mastodon)
 

@@ -23,7 +23,8 @@
 		 (:file "notifications")
 		 (:file "reports")
 		 (:file "search")
-		 (:file "streaming")))
+		 (:file "streaming")
+		 (:file "auth")))
 	       (:file "mastodon")))
 
 

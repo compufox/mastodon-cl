@@ -18,11 +18,16 @@
 		:unrecognized-status-privacy)
   (:export
 
+      ; auth
+      :login
+      :oauth-login
+      :console-oauth-login
+      :load-config
+   
       ;apps
       :register-application
    
       ; accounts
-      :login
       :verify-credentials
       :get-current-user
       :update-user
@@ -41,7 +46,10 @@
       :mute-account
       :unmute-account
       :get-mutes
-   
+
+      ; instances
+      :set-instance
+      
       ; searching
       :mastodon-search
 

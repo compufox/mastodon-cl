@@ -53,9 +53,8 @@ is replaces with replacement"
 
 (defun write-config (&key client access username)
   (ensure-directories-exist *config-dir*)
-  (let* ((current (load-config (concatenate 'string (replace-all *instance* "https://" "")
-					    ".conf")))
-	 (changed current))
+  (let* ((changed (load-config (concatenate 'string (replace-all *instance* "https://" "")
+					    ".conf"))))
     (cond
       (client
        (setq changed (append changed `(((:id . ,*client-id*)
@@ -72,7 +71,8 @@ is replaces with replacement"
 		 (return-from checking)))
 	     (setf (cdr (assoc :logins app)) (append (cdr (assoc :logins app))
 						     `(((:access-token . ,*access-token*)
-							(:username . ,username))))))))))
+							(:username . ,username)
+							(:refresh-token . ,*refresh-token*))))))))))
     (with-open-file (conf-file (concatenate 'string *config-dir*
 					    (replace-all *instance* "https://" "") ".conf")
 			       :direction :output
@@ -89,4 +89,3 @@ is replaces with replacement"
 
 (defun empty-stringp (string)
   (= (length (string-trim '(#\Space #\Newline #\Tab) string)) 0))
-
