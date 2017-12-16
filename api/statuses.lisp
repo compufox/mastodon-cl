@@ -79,13 +79,13 @@
 					  (if max-id (concatenate 'string "&max_id=" max-id))
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
-(defun post-status (status &key (visibility "public") sensitive spoiler reply-id media)
+(defun post-status (status &key (visibility "public") nsfw cw reply-id media)
   (when (not (member visibility *status-privacy-modes* :test #'string=)) (error 'unrecognized-status-privacy))
   (masto--perform-request `(:post "statuses" :content
 				 ,(concatenate 'list
 					       `(("status" . ,status)
 						 ("visibility" . ,visibility)
-						 ("spoiler_text" . ,spoiler)
-						 ("sensitive" . ,(when (not (null sensitive)) "true"))
+						 ("spoiler_text" . ,cw)
+						 ("sensitive" . ,(and nsfw "true"))
 						 ("in_reply_to_id" . ,reply-id))
 					       (mass-upload-media media)))))

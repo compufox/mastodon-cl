@@ -21,8 +21,6 @@
 
 (in-package :mastodon.streaming)
 
-(defparameter *stream-socket* nil)
-
 (defun stream--get-type (line)
   (if (> (length line) 1)
       (let ((type (string-upcase (string-trim '(#\Space #\Newline) (subseq line 6)))))
@@ -30,7 +28,6 @@
 	  (find-symbol type :mastodon.streaming)))))
 
 (defun stream--parse (type data)
-;  (print (format nil "Type: ~a, Data: ~a" type data))
   (let ((parsed-data (decode-json-from-string (subseq data 6))))
     (cond
       ((eq type 'notification) ()) ; make a notification object here
