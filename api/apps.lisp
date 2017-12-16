@@ -40,15 +40,16 @@
   (setq *client-key* nil)
   (setq *client-secret* nil)
   (setq *access-token* nil)
+  
   (when instance (set-instance instance))
   
   (unless name (error 'api-error :reason "application name needs to be specified"))
   (let ((tokens (decode-json-from-string
 		 (masto--perform-request `(:post "apps" :content
 						(("client_name" . ,name)
+						 ("scopes" . ,(format nil "~{~a~^ ~}" scopes))
 						 ("redirect_uris" . ,redirect-uri)
-						 ("scope" . ,(format nil "~{~a~^ ~}" scopes))
-						 ,(when website `("website" . ,website))))))))
+						 ("website" . ,(or website ""))))))))
     (setq *client-id* (cdr (assoc :id tokens)))
     (setq *client-key* (cdr (assoc :client--id tokens)))
     (setq *client-secret* (cdr (assoc :client--secret tokens)))

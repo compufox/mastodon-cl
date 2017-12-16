@@ -7,7 +7,8 @@
   "currently loaded refresh token")
 
 
-(defun oauth-login (&key instance (redirect-uri "urn:ietf:wg:oauth:2.0:oob") (scopes (list "read")))
+(defun oauth-login (&key instance (redirect-uri "urn:ietf:wg:oauth:2.0:oob") (scopes (list "read"))
+		      (method :authorize-code))
   (unless (and *client-secret* *client-key*)
     (error 'api-error :reason "the client key and secret have not been set. Have you created an app yet?"))
   (when instance (set-instance instance))
@@ -22,11 +23,12 @@
 					   (format nil "&redirect_uri=~a" redirect-uri))))
       (let ((response (decode-json-from-string
 		       (masto--perform-request `(:post "oauth/token" :content
-						      (("grant_type" . "refresh_token")
+						      (("grant_type" . "authorization_code")
 						       ("scope" . ,(format nil "~{~a~^ ~}" scopes))
+						       ("redirect_uri" . ,redirect-uri)
 						       ("client_id" . ,*client-key*)
 						       ("client_secret" . ,*client-secret*)
-						       ("refresh_token" . ,*refresh-token*)))))))
+						       ("code" . ,*refresh-token*)))))))
 	(setq *access-token* (cdr (assoc :access--token response))))))
 
 
@@ -34,14 +36,16 @@
   (let ((url (oauth-login :instance instance
 			  :redirect-uri redirect-uri
 			  :scopes scopes)))
-    (if url
+    (if (not (cdr (assoc :access--token url)))
 	(progn
 	  (print (format nil "~a~%" url))
 	  (setq *refresh-token* (string-downcase (string-trim '(#\Space #\Newline #\Tab) (read))))
-	  (oauth-login)))))
+	  (oauth-login :instance instance
+		       :redirect-uri redirect-uri
+		       :scopes scopes)))))
   
 
-(defun login (user-email password &key (save-token t) instance)
+(defun login (user-email password &key (save-token t) instance (scopes '("read")))
   "tries to log in to *INSTANCE* with the provided USER-EMAIL and PASSWORD
 if SAVE-TOKEN is non-nil the tokens will be written out to a config file"
   (unless (and *client-secret* *client-key*)
@@ -55,6 +59,7 @@ if SAVE-TOKEN is non-nil the tokens will be written out to a config file"
 						("client_secret" . ,*client-secret*)
 						("grant_type" . "password")
 						("username" . ,user-email)
+						("scope" . ,(format nil "~{~a~^ ~}" scopes))
 						("password" . ,password)))))))
     (setq *access-token* (cdr (assoc :access--token token)))
     (when save-token
