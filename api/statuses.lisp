@@ -3,6 +3,54 @@
 (defvar *status-privacy-modes* '("public" "unlisted" "private" "direct")
   "the different privacy modes that a status can have")
 
+(defclass status ()
+  ((content :initarg  :content
+	    :accessor status-content)
+   (author  :initarg  :author
+	    :accessor status-author)
+   (visibility :initarg :visibility
+	       :accessor status-visibility)
+   (id      :initarg :id
+	    :accessor status-id)
+   (created-at :initarg :created-at
+	       :accessor status-posted-at)
+   (tags    :initarg :tags
+	    :accessor status-tags)
+   (reblog-count :accessor status-times-reblogged)
+   (favourite-count :accessor status-times-faved)
+   (mentions :initarg :mentions
+	     :accessor status-mentions)
+   (nsfw     :initarg :nsfw
+	     :accessor status-nsfw?)
+   (cw       :initarg :cw
+	     :accessor status-cw)
+   (reblogged :initarg :reblogged
+	      :accessor status-reblogged?)
+   (favourited :initarg :faved
+	       :accessor status-favourited?)
+   (reply-id :initarg :reply-id
+	     :accessor status-reply-id)
+   (url :initarg :url
+	:accessor status-url)))
+
+(defun make-status (raw-status)
+  (make-instance 'status
+		 :id (cdr (assoc :id raw-status))
+		 :content (cdr (assoc :content raw-status))
+		 :author (make-account (cdr (assoc :account raw-status)))
+		 :visibility (cdr (assoc :visibility raw-status))
+		 :cw (cdr (assoc :spoiler--text raw-status))
+		 :created-at (cdr (assoc :created--at raw-status))
+		 :reply-id (cdr (assoc :in--reply--to--id raw-status))
+		 :mentions (cdr (assoc :mentions raw-status))
+		 :url (cdr (assoc :url raw-status))
+		 :nsfw (cdr (assoc :sensitive raw-status))
+		 :faved (cdr (assoc :favourited raw-status))
+		 :reblogged (cdr (assoc :reblogged raw-status))))
+
+;(defmethod status-times-reblogged (toot status)
+;    )
+
 (defun fave-status (id)
   (masto--perform-request `(:post ,(concatenate 'string
 					       "statuses/"
@@ -42,6 +90,7 @@
   (masto--perform-request `(:delete ,(concatenate 'string "statuses/" id))))
 
 (defun get-reblog-count (id &key max-id since-id (limit 40))
+  (setq limit (min limit 80))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
@@ -51,6 +100,7 @@
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
 (defun get-favourite-count (id &key max-id since-id (limit 40))
+  (setq limit (min limit 80))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string

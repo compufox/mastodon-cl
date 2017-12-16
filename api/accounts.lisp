@@ -1,5 +1,46 @@
 (in-package :mastodon.api)
 
+(defclass account ()
+  ((id :initarg :id
+       :accessor account-id)
+   (username :initarg :username
+	     :accessor account-username)
+   (handle :initarg :acct
+	   :accessor account-handle)
+   (display-name :initarg :name
+		 :accessor account-display-name)
+   (locked :initarg :locked
+	   :accessor account-locked?)
+   (created-at :initarg :created-at
+	       :accessor account-created-at)
+   (follower-count :accessor account-follower-count)
+   (following-count :accessor account-following-count)
+   (statuses-count :accessor account-status-count)
+   (bio :initarg :bio
+	:accessor account-bio)
+   (url :initarg :url
+	:accessor account-url)
+   (avatar :initarg :avatar
+	   :accessor account-avatar-url)
+   (header :initarg :header
+	   :accessor account-header-url)
+   (moved-to-account :initarg :moved
+		     :accessor account-moved?)))
+
+(defun make-account (raw-account)
+  (make-instance 'account
+		 :id (cdr (assoc :id raw-account))
+		 :username (cdr (assoc :username raw-account))
+		 :acct (cdr (assoc :acct raw-account))
+		 :name (cdr (assoc :display--name raw-account))
+		 :locked (cdr (assoc :locked raw-account))
+		 :created-at (cdr (assoc :created--at raw-account))
+		 :bio (cdr (assoc :note raw-account))
+		 :url (cdr (assoc :url raw-account))
+		 :avatar (cdr (assoc :avatar raw-account))
+		 :header (cdr (assoc :header raw-account))
+		 :moved (cdr (assoc :moved--to--account raw-account))))
+
 (defun get-account (id)
   (decode-json-from-string
    (masto--perform-request `(:get
