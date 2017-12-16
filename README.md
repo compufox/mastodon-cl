@@ -39,6 +39,14 @@ currently not on quicklisp, but supports being loaded by it, assuming your folde
 (mastodon.streaming:stream-notifications)
 ```
 
+## Todo:
+- write more (specific) errors
+- finish streaming functions
+- finish the oauth token flow
+- make objects for statuses/notifications
+- write/import parser that strips html characters from statuses
+- ratelimiting
+
 If you want full access to the api look in the package mastodon.api (gets loaded with the mastodon package). It exposes a lot more of the direct mastodon api to play with!
 
 
