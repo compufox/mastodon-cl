@@ -1,5 +1,15 @@
 (in-package :mastodon.api)
 
+(defvar *html-replace-regex* (create-scanner "<.+?>"))
+(defvar *html-replace-table* '(("&quot;" . "\"")
+			       ("&apos;" . "'")
+			       ("&lt;" . "<")
+			       ("&gt;" . ">")
+			       ("&amp;" . "&")
+			       ("&tilde;" . "~")
+			       ("<br />" . #\Newline)
+			       ("</p><p>" . #\Newline)))
+
 (defun masto--api-path (path)
   (if (not (search "oauth" path))
       (concatenate 'string *instance* "/api/v1/" path)
@@ -20,10 +30,17 @@
 					   ("User-Agent" . ,*user-agent*)))
 			      args))))
 
+(defun remove-html-tags (string)
+  (loop
+     for (tag . repl) in *html-replace-table*
+     do (setq string (replace-all string tag repl)))
+  (regex-replace-all *html-replace-regex* string ""))
+
 (defun replace-all (string part replacement &key (test #'char=))
   "Returns a new string in which all the occurences of the part
 is replaces with replacement"
   (with-output-to-string (out)
+    (setq replacement (string replacement))
     (loop
        with part-length = (length part)
        for old-pos = 0 then (+ pos part-length)

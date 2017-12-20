@@ -6,6 +6,10 @@
 		:url-encode)
   (:import-from :cl-json
 		:decode-json-from-string)
+  (:import-from :cl-ppcre
+		:regex-replace
+		:regex-replace-all
+		:create-scanner)
   (:shadowing-import-from :dex
 			  :get
 			  :delete

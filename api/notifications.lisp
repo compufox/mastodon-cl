@@ -1,5 +1,8 @@
 (in-package :mastodon.api)
 
+(defclass notification ()
+  ())
+
 (defun get-notifications (&key max-id since-id (limit 15) exclude-types)
   (setq limit (min limit 30))
   (decode-json-from-string

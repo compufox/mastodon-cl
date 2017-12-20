@@ -5,38 +5,38 @@
 
 (defclass status ()
   ((content :initarg  :content
-	    :accessor status-content)
+	    :reader status-content)
    (author  :initarg  :author
-	    :accessor status-author)
+	    :reader status-author)
    (visibility :initarg :visibility
-	       :accessor status-visibility)
+	       :reader status-visibility)
    (id      :initarg :id
-	    :accessor status-id)
+	    :reader status-id)
    (created-at :initarg :created-at
-	       :accessor status-posted-at)
+	       :reader status-posted-at)
    (tags    :initarg :tags
-	    :accessor status-tags)
-   (reblog-count :accessor status-times-reblogged)
-   (favourite-count :accessor status-times-faved)
+	    :reader status-tags)
+   (reblog-count :reader status-times-reblogged)
+   (favourite-count :reader status-times-faved)
    (mentions :initarg :mentions
-	     :accessor status-mentions)
+	     :reader status-mentions)
    (nsfw     :initarg :nsfw
-	     :accessor status-nsfw?)
+	     :reader status-nsfw?)
    (cw       :initarg :cw
-	     :accessor status-cw)
+	     :reader status-cw)
    (reblogged :initarg :reblogged
-	      :accessor status-reblogged?)
+	      :reader status-reblogged?)
    (favourited :initarg :faved
-	       :accessor status-favourited?)
+	       :reader status-favourited?)
    (reply-id :initarg :reply-id
-	     :accessor status-reply-id)
+	     :reader status-reply-id)
    (url :initarg :url
-	:accessor status-url)))
+	:reader status-url)))
 
 (defun make-status (raw-status)
   (make-instance 'status
 		 :id (cdr (assoc :id raw-status))
-		 :content (cdr (assoc :content raw-status))
+		 :content (remove-html-tags (cdr (assoc :content raw-status)))
 		 :author (make-account (cdr (assoc :account raw-status)))
 		 :visibility (cdr (assoc :visibility raw-status))
 		 :cw (cdr (assoc :spoiler--text raw-status))
@@ -47,6 +47,9 @@
 		 :nsfw (cdr (assoc :sensitive raw-status))
 		 :faved (cdr (assoc :favourited raw-status))
 		 :reblogged (cdr (assoc :reblogged raw-status))))
+
+(defmethod print-object (obj status)
+  (format t "~&~a~%~a" (princ (status-author obj)) (status-content obj)))
 
 ;(defmethod status-times-reblogged (toot status)
 ;    )

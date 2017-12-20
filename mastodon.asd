@@ -7,7 +7,8 @@
   :license "GPLv3"
   :serial t
   :depends-on (:dexador
-	       :cl-json)
+	       :cl-json
+	       :cl-ppcre)
   :components ((:module "api"
 		:components
 		((:file "errors")

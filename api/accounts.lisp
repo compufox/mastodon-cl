@@ -5,8 +5,8 @@
        :accessor account-id)
    (username :initarg :username
 	     :accessor account-username)
-   (handle :initarg :acct
-	   :accessor account-handle)
+   (acct :initarg :acct
+	   :accessor account-acct)
    (display-name :initarg :name
 		 :accessor account-display-name)
    (locked :initarg :locked
@@ -40,6 +40,9 @@
 		 :avatar (cdr (assoc :avatar raw-account))
 		 :header (cdr (assoc :header raw-account))
 		 :moved (cdr (assoc :moved--to--account raw-account))))
+
+(defmethod print-object (obj account)
+  (format t "~a ~a" (account-display-name obj) (account-handle obj)))
 
 (defun get-account (id)
   (decode-json-from-string

@@ -6,6 +6,32 @@
 (defparameter *refresh-token* nil
   "currently loaded refresh token")
 
+(defparameter *config-dir* "../config/"
+  "path to where the tokens are saved")
+
+
+(defun set-config-dir (new-dir)
+  (ensure-directories-exist new-dir)
+  (setq *config-dir* new-dir))
+
+(defun load-tokens-for-user (username &key config-dir instance)
+  (when config-dir (set-config-dir config-dir))
+  (when instance (set-instance instance))
+  (let ((config (load-config (concatenate 'string
+					  (replace-all *instance* "https://" "")
+					  ".conf"))))
+    (block setting-tokens
+      (dolist (tokens config)
+	(setq *client-id* (cdr (assoc :id tokens)))
+	(setq *client-key* (cdr (assoc :client-key tokens)))
+	(setq *client-secret* (cdr (assoc :client-secret tokens)))
+	(dolist (login (cdr (assoc :logins tokens)))
+	  (when (string= (cdr (assoc :username login))
+			 username)
+	    (progn 
+	      (setq *access-token* (cdr (assoc :access-token login)))
+	      (setq *refresh-token* (cdr (assoc :refresh-token login)))
+	      (return-from setting-tokens))))))))
 
 (defun oauth-login (&key instance (redirect-uri "urn:ietf:wg:oauth:2.0:oob") (scopes (list "read"))
 		      (method :authorize-code))
