@@ -31,28 +31,59 @@
    (reply-id :initarg :reply-id
 	     :reader status-reply-id)
    (url :initarg :url
-	:reader status-url)))
+	:reader status-url)
+   (uri :initarg :uri
+	:reader status-uri)))
 
 (defun make-status (raw-status)
-  (make-instance 'status
-		 :id (cdr (assoc :id raw-status))
-		 :content (remove-html-tags (cdr (assoc :content raw-status)))
-		 :author (make-account (cdr (assoc :account raw-status)))
-		 :visibility (cdr (assoc :visibility raw-status))
-		 :cw (cdr (assoc :spoiler--text raw-status))
-		 :created-at (cdr (assoc :created--at raw-status))
-		 :reply-id (cdr (assoc :in--reply--to--id raw-status))
-		 :mentions (cdr (assoc :mentions raw-status))
-		 :url (cdr (assoc :url raw-status))
-		 :nsfw (cdr (assoc :sensitive raw-status))
-		 :faved (cdr (assoc :favourited raw-status))
-		 :reblogged (cdr (assoc :reblogged raw-status))))
+  (if (not (null raw-status))
+      (make-instance 'status
+		     :id (cdr (assoc :id raw-status))
+		     :content (remove-html-tags (cdr (assoc :content raw-status)))
+		     :author (make-account (cdr (assoc :account raw-status)))
+		     :visibility (cdr (assoc :visibility raw-status))
+		     :cw (cdr (assoc :spoiler--text raw-status))
+		     :created-at (cdr (assoc :created--at raw-status))
+		     :reply-id (cdr (assoc :in--reply--to--id raw-status))
+		     :mentions (cdr (assoc :mentions raw-status))
+		     :url (cdr (assoc :url raw-status))
+		     :uri (cdr (assoc :uri raw-status))
+		     :nsfw (cdr (assoc :sensitive raw-status))
+		     :faved (cdr (assoc :favourited raw-status))
+		     :reblogged (cdr (assoc :reblogged raw-status)))
+      nil))
 
 (defmethod print-object (obj status)
-  (format t "~&~a~%~a" (princ (status-author obj)) (status-content obj)))
+  (format t "~&~a~%~a" (status-author obj) (status-content obj)))
 
-;(defmethod status-times-reblogged (toot status)
-;    )
+(defmethod status-toggle-favourite ((toot status))
+  (if (status-favourited? toot)
+      (status-unfavourite toot)
+      (status-favourite toot)))
+
+(defmethod status-toggle-reblog ((toot status))
+  (if (status-reblogged? toot)
+      (status-unreblog toot)
+      (status-reblog toot)))
+
+(defmethod status-unfavourite ((toot status))
+  (unfave-status (status-id toot))
+  (setf (slot-value toot 'favourited) nil))
+
+(defmethod status-favourite ((toot status))
+  (fave-status (status-id toot))
+  (setf (slot-value toot 'favourited) t))
+
+(defmethod status-reblog ((toot status))
+  (reblog-status (status-id toot))
+  (setf (slot-value toot 'reblogged) t))
+
+(defmethod status-unreblog ((toot status))
+  (unreblog-status (status-id toot))
+  (setf (slot-value toot 'reblogged) nil))
+
+(defmethod status-delete ((toot status))
+  (delete-status (status-id toot)))
 
 (defun fave-status (id)
   (masto--perform-request `(:post ,(concatenate 'string
@@ -92,7 +123,7 @@
 (defun delete-status (id)
   (masto--perform-request `(:delete ,(concatenate 'string "statuses/" id))))
 
-(defun get-reblog-count (id &key max-id since-id (limit 40))
+(defun get-reblogged (id &key max-id since-id (limit 40))
   (setq limit (min limit 80))
   (decode-json-from-string
    (masto--perform-request `(:get
@@ -102,7 +133,7 @@
 					  (if max-id (concatenate 'string "&max_id=" max-id))
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
-(defun get-favourite-count (id &key max-id since-id (limit 40))
+(defun get-favourited (id &key max-id since-id (limit 40))
   (setq limit (min limit 80))
   (decode-json-from-string
    (masto--perform-request `(:get
