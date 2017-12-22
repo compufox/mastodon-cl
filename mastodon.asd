@@ -14,6 +14,7 @@
 		((:file "errors")
 		 (:file "api")
 		 (:file "util")
+		 (:file "lists")
 		 (:file "apps")
 		 (:file "media")
 		 (:file "follows")

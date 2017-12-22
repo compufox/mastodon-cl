@@ -41,14 +41,16 @@
 		 :header (cdr (assoc :header raw-account))
 		 :moved (cdr (assoc :moved--to--account raw-account))))
 
-(defmethod print-object (obj account)
-  (format t "~a ~a" (account-display-name obj) (account-handle obj)))
+(defmethod print-object ((obj account) out)
+  (format out "~a" (account-acct obj)))
+
 
 (defun get-account (id)
-  (decode-json-from-string
-   (masto--perform-request `(:get
-			    ,(concatenate 'string
-					  "accounts/" id)))))
+  (make-account
+   (decode-json-from-string
+    (masto--perform-request `(:get
+			     ,(concatenate 'string
+					   "accounts/" id))))))
 
 (defun get-current-user ()
   (decode-json-from-string
@@ -69,7 +71,7 @@
 				  :content ,updated-user-data))))
 					 
 (defun get-account-followers (id &key max-id since-id (limit 40))
-  (setq limit (min limit 80))
+  (setq limit (write-to-string (min limit 80)))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
@@ -79,7 +81,7 @@
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
 (defun get-account-follows (id &key max-id since-id (limit 40))
-  (setq limit (min limit 80))
+  (setq limit (write-to-string (min limit 80)))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
@@ -89,20 +91,25 @@
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
 (defun get-account-statuses (id &key exclude-replies pinned only-media max-id since-id (limit 20))
-  (setq limit (min limit 40))
-  (decode-json-from-string
-   (masto--perform-request `(:get
-			    ,(concatenate 'string
-					  "accounts/" id "statuses"
-					  "?limit=" (write-to-string limit)
-					  (if exclude-replies "&exclude_replies=true")
-					  (if pinned "&pinned=true")
-					  (if only-media "&only_media=true")
-					  (if max-id (concatenate 'string "&max_id=" max-id))
-					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
+  (setq limit (write-to-string (min limit 40)))
+  (let ((raw-statuses (decode-json-from-string
+		       (masto--perform-request `(:get
+						,(concatenate 'string
+							      "accounts/" id "statuses"
+							      "?limit=" (write-to-string limit)
+							      (if exclude-replies "&exclude_replies=true")
+							      (if pinned "&pinned=true")
+							      (if only-media "&only_media=true")
+							      (if max-id (concatenate 'string "&max_id=" max-id))
+							      (if since-id (concatenate 'string "&since_id=" since-id))))))))
+    (labels ((make-statuses (status)
+	       (if (cdr status)
+		   (cons (make-status (car status)) (make-statuses (rest status)))
+		   (cons (car status) nil))))
+      (make-statuses raw-statuses))))
 
 (defun search-accounts (query &key (limit 40))
-  (setq limit (mint limit 80))
+  (setq limit (write-to-string (mint limit 80)))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string

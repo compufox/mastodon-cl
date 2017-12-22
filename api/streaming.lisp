@@ -72,3 +72,5 @@
 (defun stream-notifications (&key (callback #'print))
   (stream--backend "streaming/user" callback 'notification))
     
+(defun stream-list (mastodon-list &key (callback #'print))
+  (stream--backend (concatenate 'string "streaming/list?list=" mastodon-list) callback 'update 'delete))

@@ -53,8 +53,8 @@
 		     :reblogged (cdr (assoc :reblogged raw-status)))
       nil))
 
-(defmethod print-object (obj status)
-  (format t "~&~a~%~a" (status-author obj) (status-content obj)))
+(defmethod print-object ((obj status) out)
+  (format out "~&~a~%~a" (status-author obj) (status-content obj)))
 
 (defmethod status-toggle-favourite ((toot status))
   (if (status-favourited? toot)
@@ -83,7 +83,8 @@
   (setf (slot-value toot 'reblogged) nil))
 
 (defmethod status-delete ((toot status))
-  (delete-status (status-id toot)))
+  (delete-status (status-id toot))
+  (status-id toot))
 
 (defun fave-status (id)
   (masto--perform-request `(:post ,(concatenate 'string
@@ -124,7 +125,7 @@
   (masto--perform-request `(:delete ,(concatenate 'string "statuses/" id))))
 
 (defun get-reblogged (id &key max-id since-id (limit 40))
-  (setq limit (min limit 80))
+  (setq limit (write-to-string (min limit 80)))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
@@ -134,7 +135,7 @@
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
 (defun get-favourited (id &key max-id since-id (limit 40))
-  (setq limit (min limit 80))
+  (setq limit (write-to-string (min limit 80)))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
@@ -154,7 +155,7 @@
 					 "statuses/" id "/unmute"))))
 
 (defun get-favourited-statuses (&key max-id since-id (limit 20))
-  (setq limit (min limit 40))
+  (setq limit (write-to-string (min limit 40)))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
