@@ -50,7 +50,13 @@
 		     :uri (cdr (assoc :uri raw-status))
 		     :nsfw (cdr (assoc :sensitive raw-status))
 		     :faved (cdr (assoc :favourited raw-status))
-		     :reblogged (cdr (assoc :reblogged raw-status)))
+		     :reblogged (cdr (assoc :reblogged raw-status))
+		     :tags (labels ((make-tag-list (tags)
+				      (if (cdr tags)
+					  (cons (format nil "#~a" (cdr (assoc :name (car tags)))) (make-tag-list (rest tags)))
+					  (cons (format nil "#~a" (cdr (assoc :name (car tags)))) nil))))
+			     (when (not (null (cdr (assoc :tags raw-status))))
+				 (make-tag-list (cdr (assoc :tags raw-status))))))
       nil))
 
 (defmethod print-object ((obj status) out)
@@ -85,6 +91,13 @@
 (defmethod status-delete ((toot status))
   (delete-status (status-id toot))
   (status-id toot))
+
+
+(defun get-status (id)
+  (make-status
+   (decode-json-from-string
+    (masto--perform-request `(:get ,(concatenate 'string
+						"statuses/" id))))))
 
 (defun fave-status (id)
   (masto--perform-request `(:post ,(concatenate 'string
