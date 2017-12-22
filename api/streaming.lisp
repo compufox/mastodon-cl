@@ -12,8 +12,8 @@
 		:masto--perform-request
 		:merge-string-list
 		:empty-stringp
-		:make-status)
-;		:make-notification)
+		:make-status
+		:make-notification)
 		
   (:export :stream-home
 	   :stream-local
@@ -32,9 +32,9 @@
 (defun stream--parse (type data callback)
   (let ((parsed-data (decode-json-from-string (subseq data 6))))
     (cond
-      ((eq type 'notification) ()) ; make a notification object here
-      ((eq type 'update) (funcall callback (make-status parsed-data))) ;make a status object here
-      ((eq type 'delete) ()))))  ;remove status from list of saved ones
+      ((eq type 'notification) (funcall callback (make-notification parsed-data))) ; calls callback with the notification
+      ((eq type 'update) (funcall callback (make-status parsed-data))) ;calls callback with the status
+      ((eq type 'delete) (funcall callback parsed-data)))))  ;calls callback with the id of the deleted status
 
 (defun stream--backend (api-path &rest wanted-types-and-callback)
   (let  ((callback (car wanted-types-and-callback))
