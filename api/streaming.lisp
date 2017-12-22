@@ -31,6 +31,7 @@
 
 (defun stream--parse (type data callback)
   (let ((parsed-data (decode-json-from-string (subseq data 6))))
+;    (print parsed-data)
     (cond
       ((eq type 'notification) (funcall callback (make-notification parsed-data))) ; calls callback with the notification
       ((eq type 'update) (funcall callback (make-status parsed-data))) ;calls callback with the status

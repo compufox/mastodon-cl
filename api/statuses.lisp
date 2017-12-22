@@ -8,6 +8,8 @@
 	    :reader status-content)
    (author  :initarg  :author
 	    :reader status-author)
+   (reblogger :initarg :reblogger
+	      :reader status-reblogger)
    (visibility :initarg :visibility
 	       :reader status-visibility)
    (id      :initarg :id
@@ -16,8 +18,10 @@
 	       :reader status-posted-at)
    (tags    :initarg :tags
 	    :reader status-tags)
-   (reblog-count :reader status-times-reblogged)
-   (favourite-count :reader status-times-faved)
+   (reblog-count :initarg :reblog-count
+		 :reader status-times-reblogged)
+   (favourite-count :initarg :fave-count
+		    :reader status-times-favourited)
    (mentions :initarg :mentions
 	     :reader status-mentions)
    (nsfw     :initarg :nsfw
@@ -36,31 +40,40 @@
 	:reader status-uri)))
 
 (defun make-status (raw-status)
-  (if (not (null raw-status))
-      (make-instance 'status
-		     :id (cdr (assoc :id raw-status))
-		     :content (remove-html-tags (cdr (assoc :content raw-status)))
-		     :author (make-account (cdr (assoc :account raw-status)))
-		     :visibility (cdr (assoc :visibility raw-status))
-		     :cw (cdr (assoc :spoiler--text raw-status))
-		     :created-at (cdr (assoc :created--at raw-status))
-		     :reply-id (cdr (assoc :in--reply--to--id raw-status))
-		     :mentions (cdr (assoc :mentions raw-status))
-		     :url (cdr (assoc :url raw-status))
-		     :uri (cdr (assoc :uri raw-status))
-		     :nsfw (cdr (assoc :sensitive raw-status))
-		     :faved (cdr (assoc :favourited raw-status))
-		     :reblogged (cdr (assoc :reblogged raw-status))
-		     :tags (labels ((make-tag-list (tags)
-				      (if (cdr tags)
-					  (cons (format nil "#~a" (cdr (assoc :name (car tags)))) (make-tag-list (rest tags)))
-					  (cons (format nil "#~a" (cdr (assoc :name (car tags)))) nil))))
-			     (when (not (null (cdr (assoc :tags raw-status))))
+  (let ((reblog (rest (assoc :reblog raw-status))))
+    (if reblog (setq raw-status (append reblog `((:reblogger . ,(cdr (assoc :account raw-status)))))))
+    (if (not (null raw-status))
+	(make-instance 'status
+		       :id (cdr (assoc :id raw-status))
+		       :content (remove-html-tags (cdr (assoc :content raw-status)))
+		       :author (make-account (cdr (assoc :account raw-status)))
+		       :reblogger (make-account (cdr (assoc :reblogger raw-status)))
+		       :visibility (cdr (assoc :visibility raw-status))
+		       :cw (cdr (assoc :spoiler--text raw-status))
+		       :created-at (cdr (assoc :created--at raw-status))
+		       :reply-id (cdr (assoc :in--reply--to--id raw-status))
+		       :mentions (cdr (assoc :mentions raw-status))
+		       :url (cdr (assoc :url raw-status))
+		       :uri (cdr (assoc :uri raw-status))
+		       :nsfw (cdr (assoc :sensitive raw-status))
+		       :faved (cdr (assoc :favourited raw-status))
+		       :reblogged (cdr (assoc :reblogged raw-status))
+		       :reblog-count (cdr (assoc :reblogs--count raw-status))
+		       :fave-count (cdr (assoc :favourites--count raw-status))
+		       :tags (labels ((make-tag-list (tags)
+					(if (cdr tags)
+					    (cons (format nil "#~a" (cdr (assoc :name (car tags)))) (make-tag-list (rest tags)))
+					    (cons (format nil "#~a" (cdr (assoc :name (car tags)))) nil))))
+			       (when (not (null (cdr (assoc :tags raw-status))))
 				 (make-tag-list (cdr (assoc :tags raw-status))))))
-      nil))
+      nil)))
 
 (defmethod print-object ((obj status) out)
-  (format out "~&~a~%~a" (status-author obj) (status-content obj)))
+  (if (not (null (status-reblogger obj)))
+      (format out "~&~a Reblogged by:~a~%~a"
+	      (status-author obj) (status-reblogger obj)
+	      (status-content obj))
+      (format out "~&~a~%~a" (status-author obj) (status-content obj))))
 
 (defmethod status-toggle-favourite ((toot status))
   (if (status-favourited? toot)
