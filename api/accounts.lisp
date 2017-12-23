@@ -76,21 +76,24 @@
 		     :avatar (cdr (assoc :avatar raw-account))
 		     :header (cdr (assoc :header raw-account))
 		     :moved (cdr (assoc :moved--to--account raw-account))
-		     :ship (get-relationship (cdr (assoc :id raw-account)))
+		     :ship (first (get-relationship (cdr (assoc :id raw-account))))
 		     )
       nil))
 
-(defmethod account-requested-follow ((acct account))
+(defmethod account-requested-follow? ((acct account))
   (follow-requested? (account-relationship acct)))
 
-(defmethod account-muted ((acct account))
+(defmethod account-muted? ((acct account))
   (muted? (account-relationship acct)))
 
-(defmethod blocking-account-domain ((acct account))
+(defmethod blocking-account-domain? ((acct account))
   (domain-blocked? (account-relationship acct)))
 
 (defmethod following-account? ((acct account))
   (following? (account-relationship acct)))
+
+(defmethod account-following-me? ((acct account))
+  (follow-me? (account-relationship acct)))
 
 (defmethod print-object ((obj account) out)
   (format out "~a" (account-acct obj)))
