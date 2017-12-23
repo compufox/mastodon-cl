@@ -39,7 +39,7 @@ currently not on quicklisp, but supports being loaded by it, assuming your folde
 (mastodon.streaming:stream-notifications)
 ```
 
-[~~Todo~~](https://github.com/theZacAttacks/mastodon-cl/blob/master/TODO.md)
+[Todo](https://github.com/theZacAttacks/mastodon-cl/blob/master/TODO.md)
 
 If you want full access to the api look in the package mastodon.api (gets loaded with the mastodon package). It exposes a lot more of the direct mastodon api to play with!
 

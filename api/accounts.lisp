@@ -2,30 +2,65 @@
 
 (defclass account ()
   ((id :initarg :id
-       :accessor account-id)
+       :reader account-id)
    (username :initarg :username
-	     :accessor account-username)
+	     :reader account-username)
    (acct :initarg :acct
-	   :accessor account-acct)
+	   :reader account-acct)
    (display-name :initarg :name
-		 :accessor account-display-name)
+		 :reader account-display-name)
    (locked :initarg :locked
-	   :accessor account-locked?)
+	   :reader account-locked?)
    (created-at :initarg :created-at
-	       :accessor account-created-at)
-   (follower-count :accessor account-follower-count)
-   (following-count :accessor account-following-count)
-   (statuses-count :accessor account-status-count)
+	       :reader account-created-at)
+   (follower-count :initarg :follower-count
+		   :reader account-follower-count)
+   (following-count :initarg :following-count
+		    :reader account-following-count)
+   (statuses-count :initarg :status-count
+		   :reader account-status-count)
+   (relationship :initarg :ship
+		 :reader account-relationship)
    (bio :initarg :bio
-	:accessor account-bio)
+	:reader account-bio)
    (url :initarg :url
-	:accessor account-url)
+	:reader account-url)
    (avatar :initarg :avatar
-	   :accessor account-avatar-url)
+	   :reader account-avatar-url)
+   (avatar-static :initarg :avatar-static
+		  :reader account-avatar-static-url)
    (header :initarg :header
-	   :accessor account-header-url)
+	   :reader account-header-url)
+   (header-static :initarg :header-static
+		  :reader account-header-static-url)
    (moved-to-account :initarg :moved
-		     :accessor account-moved?)))
+		     :reader account-moved?)))
+
+(defclass relationship ()
+  ((following :initarg :following
+	      :reader following?)
+   (followed-by :initarg :followed-by
+		:reader follow-me?)
+   (blocking :initarg :blocking
+	     :reader blocked?)
+   (muting :initarg :muting
+	   :reader muted?)
+   (muting-notifications :initarg :muting-notifs
+			 :reader muting-notifications?)
+   (follow-requested :initarg :follow-req
+		     :reader follow-requested?)
+   (domain-blocked :initarg :domain-blocking
+		   :reader domain-blocked?)))
+
+(defun make-relationship (raw-ship)
+  (make-instance 'relationship
+		 :following (cdr (assoc :following raw-ship))
+		 :followed-by (cdr (assoc :followed--by raw-ship))
+		 :blocking (cdr (assoc :blocking raw-ship))
+		 :muting (cdr (assoc :muting raw-ship))
+		 :muting-notifs (cdr (assoc :muting--notifications raw-ship))
+		 :follow-req (cdr (assoc :requested raw-ship))
+		 :domain-blocking (cdr (assoc :domain--blocking raw-ship))))
 
 (defun make-account (raw-account)
   (if (not (null raw-account))
@@ -40,8 +75,22 @@
 		     :url (cdr (assoc :url raw-account))
 		     :avatar (cdr (assoc :avatar raw-account))
 		     :header (cdr (assoc :header raw-account))
-		     :moved (cdr (assoc :moved--to--account raw-account)))
+		     :moved (cdr (assoc :moved--to--account raw-account))
+		     :ship (get-relationship (cdr (assoc :id raw-account)))
+		     )
       nil))
+
+(defmethod account-requested-follow ((acct account))
+  (follow-requested? (account-relationship acct)))
+
+(defmethod account-muted ((acct account))
+  (muted? (account-relationship acct)))
+
+(defmethod blocking-account-domain ((acct account))
+  (domain-blocked? (account-relationship acct)))
+
+(defmethod following-account? ((acct account))
+  (following? (account-relationship acct)))
 
 (defmethod print-object ((obj account) out)
   (format out "~a" (account-acct obj)))
@@ -55,8 +104,9 @@
 					   "accounts/" id))))))
 
 (defun get-current-user ()
-  (decode-json-from-string
-   (masto--perform-request '(:get "accounts/verify_credentials"))))
+  (make-account
+   (decode-json-from-string
+    (masto--perform-request '(:get "accounts/verify_credentials")))))
 
 (setf (fdefinition 'verify-credentials) #'get-current-user)
 
@@ -70,35 +120,50 @@
 			       when (null (cdr el)) collect el)
 			    updated-user-data))
     (masto--perform-request `(:patch "accounts/update_credentials"
-				  :content ,updated-user-data))))
-					 
-(defun get-account-followers (id &key max-id since-id (limit 40))
-  (setq limit (write-to-string (min limit 80)))
-  (decode-json-from-string
-   (masto--perform-request `(:get
-			    ,(concatenate 'string
-					  "accounts/" id "/followers"
-					  "?limit=" (write-to-string limit)
-					  (if max-id (concatenate 'string "&max_id=" max-id))
-					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
+				    :content ,updated-user-data))))
 
-(defun get-account-follows (id &key max-id since-id (limit 40))
+(defun get-relationship (ids)
+  (unless (listp ids) (setq ids (list ids)))
+  (let ((raw-ships (decode-json-from-string
+		    (masto--perform-request `(:get ,(concatenate 'string
+								"accounts/relationships?"
+								(format nil "~{id[]=~a~^&~}" ids)))))))
+    (labels ((make-ships (ships)
+	       (if (cdr ships)
+		   (cons (make-relationship (car ships)) (make-ships (rest ships)))
+		   (cons (make-relationship (car ships)) nil))))
+      (make-ships raw-ships))))
+					 
+(defun get-followers (id &key max-id since-id (limit 40))
+  (setq limit (write-to-string (min limit 80)))
+  (let ((raw-accounts (decode-json-from-string
+		       (masto--perform-request `(:get
+						,(concatenate 'string
+							      "accounts/" id "/followers"
+							      "?limit=" limit
+							      (if max-id (concatenate 'string "&max_id=" max-id))
+							      (if since-id (concatenate 'string "&since_id=" since-id))))))))
+    (loop
+       for acct in raw-accounts
+       collect (make-account acct))))
+
+(defun get-follows (id &key max-id since-id (limit 40))
   (setq limit (write-to-string (min limit 80)))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "accounts/" id "/following"
-					  "?limit=" (write-to-string limit)
+					  "?limit=" limit
 					  (if max-id (concatenate 'string "&max_id=" max-id))
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
-(defun get-account-statuses (id &key exclude-replies pinned only-media max-id since-id (limit 20))
+(defun get-statuses (id &key exclude-replies pinned only-media max-id since-id (limit 20))
   (setq limit (write-to-string (min limit 40)))
   (let ((raw-statuses (decode-json-from-string
 		       (masto--perform-request `(:get
 						,(concatenate 'string
 							      "accounts/" id "statuses"
-							      "?limit=" (write-to-string limit)
+							      "?limit=" limit
 							      (if exclude-replies "&exclude_replies=true")
 							      (if pinned "&pinned=true")
 							      (if only-media "&only_media=true")
@@ -111,9 +176,9 @@
       (make-statuses raw-statuses))))
 
 (defun search-accounts (query &key (limit 40))
-  (setq limit (write-to-string (mint limit 80)))
+  (setq limit (write-to-string (min limit 80)))
   (decode-json-from-string
    (masto--perform-request `(:get
 			    ,(concatenate 'string
 					  "accounts/search?q=" query
-					  "&limit=" (write-to-string limit))))))
+					  "&limit=" limit)))))

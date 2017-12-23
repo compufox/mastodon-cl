@@ -11,3 +11,4 @@
 - add media slots into status class
 - write a small client using the framework
 - find a better way to support streaming (something something websockets)?
+- handle pagination
