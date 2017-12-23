@@ -22,6 +22,9 @@
 		:unrecognized-status-privacy)
   (:export
 
+      ; vars
+      :*strip-html-tags*
+
       ; auth
       :login
       :oauth-login
@@ -81,6 +84,9 @@
       :pin-status
       :unpin-status
       :delete-status
+
+      :status-author ; what if I wrote some code to get all direct slots on each class and
+		     ;  export each accessor function
       :post-status
 
       ;media
@@ -88,6 +94,6 @@
 
 (in-package :mastodon.api)
 
-(defvar *version* "0.1.3")
+(defvar *version* "0.1.4")
 
 (defvar *user-agent* (concatenate 'string "mastodon-cl/" *version*))

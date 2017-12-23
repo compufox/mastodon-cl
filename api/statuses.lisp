@@ -1,5 +1,8 @@
 (in-package :mastodon.api)
 
+(defparameter *strip-html-tags* t
+  "Set this to nil to have MAKE-STATUS not strip html tags out of the content of a message")
+
 (defvar *status-privacy-modes* '("public" "unlisted" "private" "direct")
   "the different privacy modes that a status can have")
 
@@ -45,7 +48,9 @@
     (if (not (null raw-status))
 	(make-instance 'status
 		       :id (cdr (assoc :id raw-status))
-		       :content (remove-html-tags (cdr (assoc :content raw-status)))
+		       :content (if *strip-html-tags*
+				    (remove-html-tags (cdr (assoc :content raw-status)))
+				    (cdr (assoc :content raw-status)))
 		       :author (make-account (cdr (assoc :account raw-status)))
 		       :reblogger (make-account (cdr (assoc :reblogger raw-status)))
 		       :visibility (cdr (assoc :visibility raw-status))
@@ -105,6 +110,14 @@
   (delete-status (status-id toot))
   (status-id toot))
 
+(defmethod status-get-context ((toot status))
+  (let ((context (get-context (status-id toot))))
+    (labels ((make-statuses (s-list)
+	       (if (cdr s-list)
+		   (cons (make-status (car s-list)) (make-statuses (rest s-list)))
+		   (cons (make-status (car s-list)) nil))))
+      `((:ancestors . ,(make-statuses (cdr (assoc :ancestors context))))
+	(:descendents . ,(make-statuses (cdr (assoc :descendents context))))))))
 
 (defun get-status (id)
   (make-status
@@ -149,6 +162,11 @@
     
 (defun delete-status (id)
   (masto--perform-request `(:delete ,(concatenate 'string "statuses/" id))))
+
+(defun get-context (id)
+  (decode-json-from-string
+   (masto--perform-request `(:get ,(concatenate 'string
+					       "statuses/" id "/context")))))
 
 (defun get-reblogged (id &key max-id since-id (limit 40))
   (setq limit (write-to-string (min limit 80)))
