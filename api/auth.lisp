@@ -89,4 +89,4 @@ if SAVE-TOKEN is non-nil the tokens will be written out to a config file"
 						("password" . ,password)))))))
     (setq *access-token* (cdr (assoc :access--token token)))
     (when save-token
-      (write-access-tokens :username (cdr (assoc :acct (verify-credentials)))))))
+      (write-access-tokens :username (account-username (verify-credentials))))))

@@ -57,7 +57,7 @@ is replaces with replacement"
   (write-config :client t))
 
 (defun write-access-tokens (&rest args)
-  (apply 'write-config :access t args))
+  (apply #'write-config :access t args))
 
 (defun load-config (conf-name)
   (with-open-file (conf (concatenate 'string *config-dir* conf-name)
