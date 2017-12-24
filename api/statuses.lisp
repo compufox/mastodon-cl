@@ -3,7 +3,7 @@
 (defparameter *strip-html-tags* t
   "Set this to nil to have MAKE-STATUS not strip html tags out of the content of a message")
 
-(defvar *status-privacy-modes* '("public" "unlisted" "private" "direct")
+(defvar *status-privacy-modes* '(:public :unlisted :private :direct)
   "the different privacy modes that a status can have")
 
 (defclass status ()
@@ -208,13 +208,15 @@
 					  (if max-id (concatenate 'string "&max_id=" max-id))
 					  (if since-id (concatenate 'string "&since_id=" since-id)))))))
 
-(defun post-status (status &key (visibility "public") nsfw cw reply-id media)
+(defun post-status (status &key (visibility :public) nsfw cw reply-id media)
   (when (not (member visibility *status-privacy-modes* :test #'string=)) (error 'unrecognized-status-privacy))
-  (masto--perform-request `(:post "statuses" :content
+  (make-status
+   (decode-json-from-string
+    (masto--perform-request `(:post "statuses" :content
 				 ,(concatenate 'list
 					       `(("status" . ,status)
-						 ("visibility" . ,visibility)
+						 ("visibility" . ,(string-downcase (string visibility)))
 						 ("spoiler_text" . ,cw)
 						 ("sensitive" . ,(and nsfw "true"))
 						 ("in_reply_to_id" . ,reply-id))
-					       (mass-upload-media media)))))
+					       (mass-upload-media media)))))))
